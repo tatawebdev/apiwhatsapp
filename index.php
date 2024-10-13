@@ -142,6 +142,7 @@ try {
                 // Verifica se o número está no array de números de teste
                 if (in_array($webhookInfo['api_phone_number'], $numerosTeste)) {
                     $chatbot->processarEntradaTeste($webhookInfo);
+                    $chatbot->processarEntrada($webhookInfo);
                 } else {
                     $chatbot->processarEntrada($webhookInfo);
                 }
