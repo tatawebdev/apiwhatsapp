@@ -236,10 +236,7 @@ class Chatbot
     }
 
     // Função para processar a entrada do usuário
-    public function processarEntradaTeste($data)
-    {
-
-    }
+    public function processarEntradaTeste($data) {}
     public function processarEntrada($data)
     {
 
@@ -275,13 +272,13 @@ class Chatbot
                 $this->etapa3();
                 break;
             case 4:
-                $this->etapa4($tipo_documento);
+                $this->etapa4();
                 break;
             case 5:
                 $this->etapa5();
                 break;
             case 6:
-                $this->etapa6();
+                $this->etapa6($tipo_documento);
                 break;
             case 7:
                 $this->etapa7();
@@ -300,7 +297,7 @@ class Chatbot
         // // $this->enviarMensagemWhatsApp($this->numeroUsuario, json_encode($etapaAtual));
     }
 
-    // Função para a Etapa 1 - Solicitar nome do usuário
+    // Função para a Etapa 1 - Solicitar Nome do Usuário
     public function etapa1()
     {
         // Primeira mensagem de introdução com emoji e texto em negrito
@@ -318,12 +315,9 @@ class Chatbot
 
 
 
-    // Função para a Etapa 2 - Solicitar se é Pessoa Física ou Jurídica
+    // Função para a Etapa 2 - Assunto da Consulta
     public function etapa2()
     {
-
-
-        
         if ($this->event_type != 'message_text' || empty(trim($this->mensagemUsuario)) || trim($this->mensagemUsuario) === '.' || preg_match('/^\d+$/', trim($this->mensagemUsuario))) {
             $mensagem = "Por favor, digite um seu nome para continuar.";
             $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
@@ -341,20 +335,83 @@ class Chatbot
 
         $this->atualizarAtendimento('nome', $nome);
 
+        // Definindo as seções e itens da lista interativa
+        $secoes = [
+            'Consultas Tributárias' => [
+                'row_1_id' => ['titulo' => 'Dívidas Tributárias', 'descricao' => 'Consulta sobre Dívidas Tributárias'],
+                'row_2_id' => ['titulo' => 'Planejamento Tributário', 'descricao' => 'Consulta sobre Planejamento Tributário'],
+                'row_3_id' => ['titulo' => 'Execução Fiscal', 'descricao' => 'Consulta sobre Execução Fiscal'],
+                'row_4_id' => ['titulo' => 'Consultoria Tributária', 'descricao' => 'Consultoria em assuntos tributários'],
+            ],
+            'Outros Assuntos' => [
+                'row_5_id' => ['titulo' => 'Assuntos Tributários', 'descricao' => 'Assuntos tributários diversos'],
+                'row_6_id' => ['titulo' => 'Assuntos Não Tributários', 'descricao' => 'Assuntos não tributários'],
+            ]
+        ];
+
+        // Envia a lista interativa para o usuário
+        $this->enviarListaInterativaWhatsApp(
+            $this->numeroUsuario,
+            'Selecione o assunto da sua consulta',
+            'Escolha um dos itens abaixo:',
+            '',
+            'Ver opções',
+            $secoes
+        );
+        $this->atualizarEstado(3);
+    }
+    // Função para a Etapa 3 - Detalhes da Dúvida
+    public function etapa3()
+    {
+        if ($this->event_type !== 'interactive') {
+            $mensagem = "Por favor, selecione uma opção válida da lista.";
+            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
+            return;
+        }
+        $assunto = $this->mensagemUsuario; // Supondo que o usuário escolha o assunto
+
+        $this->atualizarAtendimento('assunto', $assunto);
+
+
+        // Mensagem solicitando mais detalhes
+        $mensagem = "Entendi! Poderia detalhar a sua dúvida para que possamos oferecer uma orientação mais adequada?";
+        $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
+
+        // Atualiza o estado para indicar que o usuário está na etapa 6
+        $this->atualizarEstado(4);
+    }
+    // Função para a Etapa 4 - Tipo de Pessoa: PF ou PJ
+    public function etapa4()
+    {
+        // Verifica se o tipo de evento é "message_text"
+        if ($this->event_type !== 'message_text') {
+            $mensagem = "Por favor, envie uma mensagem de texto com detalhes sobre sua dúvida.";
+            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
+            return; // Finaliza a execução da função
+        }
+
+        // Verifica se a mensagem tem pelo menos 5 palavras ou 15 caracteres
+        if (str_word_count(trim($this->mensagemUsuario)) < 5 && strlen(trim($this->mensagemUsuario)) < 15) {
+            $mensagem = "A mensagem precisa ter pelo menos 5 palavras ou 15 caracteres. Por favor, forneça mais detalhes.";
+            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
+            return; // Finaliza a execução da função
+        }
+
+        $detalhes = $this->mensagemUsuario;
+
+        $this->atualizarAtendimento('detalhes', $detalhes);
+
         $mensagem = "Por favor, informe se a sua consulta é para uma *Pessoa Física* ou *Pessoa Jurídica*:";
         $opcoes = [
             ['button' => 'Pessoa Física'],
             ['button' => 'Pessoa Jurídica']
         ];
         $this->enviarBotoesMensagemWhatsApp($this->numeroUsuario, $mensagem, $opcoes);
-        $this->atualizarEstado(3);
+        $this->atualizarEstado(5);
     }
-
-
-    // Função para a Etapa 3 - Solicitar CPF ou CNPJ
-    public function etapa3()
+    // Função para a Etapa 5 - Solicitar CPF ou CNPJ
+    public function etapa5()
     {
-
         if ($this->event_type !== 'message_button') {
             $mensagem = "Por favor, utilize o botão para informar se a sua consulta é para uma *Pessoa Física* ou *Pessoa Jurídica*.";
             $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
@@ -372,12 +429,12 @@ class Chatbot
         }
         $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
         $tipo_documento = strtolower($tipoPessoa) === 'pessoa jurídica'  ? "cnpj" : "cpf";
-        $this->atualizarEstado(4, $tipo_documento);
+        $this->atualizarEstado(6, $tipo_documento);
     }
-
-    // Função para a Etapa 4 - Solicitar o assunto da consulta
-    public function etapa4($tipo_documento)
+    // Função para a Etapa 6 - Solicitar urgência da demanda
+    public function etapa6($tipo_documento)
     {
+
         // Verifica se o evento não é do tipo texto
         if ($this->event_type !== 'message_text') {
             $mensagem = "Por favor, digite seu CPF ou CNPJ.";
@@ -404,76 +461,6 @@ class Chatbot
             }
         }
         $this->atualizarAtendimento('documento', $documento);
-
-        // Definindo as seções e itens da lista interativa
-        $secoes = [
-            'Consultas Tributárias' => [
-                'row_1_id' => ['titulo' => 'Dívidas Tributárias', 'descricao' => 'Consulta sobre Dívidas Tributárias'],
-                'row_2_id' => ['titulo' => 'Planejamento Tributário', 'descricao' => 'Consulta sobre Planejamento Tributário'],
-                'row_3_id' => ['titulo' => 'Execução Fiscal', 'descricao' => 'Consulta sobre Execução Fiscal'],
-                'row_4_id' => ['titulo' => 'Consultoria Tributária', 'descricao' => 'Consultoria em assuntos tributários'],
-            ],
-            'Outros Assuntos' => [
-                'row_5_id' => ['titulo' => 'Assuntos Tributários', 'descricao' => 'Assuntos tributários diversos'],
-                'row_6_id' => ['titulo' => 'Assuntos Não Tributários', 'descricao' => 'Assuntos não tributários'],
-            ]
-        ];
-
-        // Envia a lista interativa para o usuário
-        $this->enviarListaInterativaWhatsApp(
-            $this->numeroUsuario,
-            'Selecione o assunto da sua consulta',
-            'Escolha um dos itens abaixo:',
-            '',
-            'Ver opções',
-            $secoes
-        );
-
-        // Atualiza o estado para a próxima etapa
-        $this->atualizarEstado(5);
-    }
-
-    // Função para a Etapa 5 - Solicitar mais detalhes da dúvida
-    public function etapa5()
-    {
-        if ($this->event_type !== 'interactive') {
-            $mensagem = "Por favor, selecione uma opção válida da lista interativa.";
-            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
-            return; // Finaliza a execução da função
-        }
-        $assunto = $this->mensagemUsuario; // Supondo que o usuário escolha o assunto
-
-        $this->atualizarAtendimento('assunto', $assunto);
-
-
-        // Mensagem solicitando mais detalhes
-        $mensagem = "Entendi! Poderia detalhar a sua dúvida para que possamos oferecer uma orientação mais adequada?";
-        $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
-
-        // Atualiza o estado para indicar que o usuário está na etapa 6
-        $this->atualizarEstado(6);
-    }
-
-    // Função para a Etapa 6 - Solicitar urgência da demanda
-    public function etapa6()
-    {
-        // Verifica se o tipo de evento é "message_text"
-        if ($this->event_type !== 'message_text') {
-            $mensagem = "Por favor, envie uma mensagem de texto com detalhes sobre sua dúvida.";
-            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
-            return; // Finaliza a execução da função
-        }
-
-        // Verifica se a mensagem tem pelo menos 5 palavras ou 15 caracteres
-        if (str_word_count(trim($this->mensagemUsuario)) < 5 && strlen(trim($this->mensagemUsuario)) < 15) {
-            $mensagem = "A mensagem precisa ter pelo menos 5 palavras ou 15 caracteres. Por favor, forneça mais detalhes.";
-            $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagem);
-            return; // Finaliza a execução da função
-        }
-
-        $detalhes = $this->mensagemUsuario;
-
-        $this->atualizarAtendimento('detalhes', $detalhes);
 
 
         // Mensagem solicitando a urgência da demanda
@@ -522,17 +509,13 @@ class Chatbot
             'urgencia' => $get['urgencia'],
         ];
         $email->send($dadosEmail);
-        
+
 
         $this->atualizarEstado(8);
 
 
         // Chama a função para finalizar o atendimento
         $this->finalizarAtendimento();
-
-
-
-
     }
 
     // Função para finalizar o atendimento
@@ -573,40 +556,38 @@ class Chatbot
     function validarCNPJ($cnpj)
     {
         $cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
-        
+
         // Valida tamanho
         if (strlen($cnpj) != 14)
             return false;
-    
+
         // Verifica se todos os digitos são iguais
         if (preg_match('/(\d)\1{13}/', $cnpj))
-            return false;	
-    
+            return false;
+
         // Valida primeiro dígito verificador
-        for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
-        {
+        for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++) {
             $soma += $cnpj[$i] * $j;
             $j = ($j == 2) ? 9 : $j - 1;
         }
-    
+
         $resto = $soma % 11;
-    
+
         if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto))
             return false;
-    
+
         // Valida segundo dígito verificador
-        for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++)
-        {
+        for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++) {
             $soma += $cnpj[$i] * $j;
             $j = ($j == 2) ? 9 : $j - 1;
         }
-    
+
         $resto = $soma % 11;
-    
+
         return $cnpj[13] == ($resto < 2 ? 0 : 11 - $resto);
     }
-    
-    
+
+
 
 
     public function isPrimeiraMensagemDoDia()
