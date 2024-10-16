@@ -1,4 +1,9 @@
 <?php
+include_once __DIR__ . '/vendor/autoload.php';
+include_once __DIR__ . '/app/config/env_loader.php';
+include_once __DIR__ . '/app/config/env.php';
+include_once __DIR__ . '/app/config/constants.php';
+
 function carregarClasse($nomeClasse)
 {
     $caminhoCompleto = PATH_MODELS . $nomeClasse . '.php';
@@ -58,7 +63,14 @@ function carregarFuncoesRecursivamente($diretorio)
         }
     }
 }
-
-carregarFuncoesRecursivamente(PATH_WHATSAPP . "Functions");
 carregarFuncoesRecursivamente(PATH_FUNCTIONS);
+
+include_once PATH_LIBS . 'whatsApp/Config.php';
+include_once PATH_LIBS . 'whatsApp/ContactMessages.php';
+include_once PATH_LIBS . 'whatsApp/CurlHttpClient.php';
+include_once PATH_LIBS . 'whatsApp/InteractiveMessages.php';
+include_once PATH_LIBS . 'whatsApp/Media.php';
+include_once PATH_LIBS . 'whatsApp/Message.php';
+include_once PATH_LIBS . 'whatsApp/WebhookProcessor.php';
+
 carregarClassesRecursivamente(PATH_MODELS);

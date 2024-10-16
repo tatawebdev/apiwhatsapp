@@ -1,6 +1,6 @@
 consultas_cnpj/
-# vendor/
 .env
+# vendor/
 *error_log.txt
 *newfile.json
 *requisicoes.log
