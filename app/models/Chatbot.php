@@ -22,7 +22,7 @@ class Chatbot extends Models\Connection
 
     public function getAtendimentosAntigosEmAndamento()
     {
-        $sql = "SELECT * FROM `atendimento` WHERE status = 'Em Andamento' AND created_at <= NOW() - INTERVAL 3 HOUR ORDER BY `status` ASC LIMIT 3";
+        $sql = "SELECT * FROM `atendimento` WHERE status = 'Em Andamento' AND created_at <= NOW() - INTERVAL 3 HOUR ORDER BY `status` ASC";
         return $this->connection->fetchAll($sql);
     }
 
