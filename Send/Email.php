@@ -5,11 +5,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-define('HOST_EMAIL', env('HOST_EMAIL'));
-define('USERNAME_EMAIL', env('USERNAME_EMAIL'));
-define('PASSWORD_EMAIL', env('PASSWORD_EMAIL'));
-define('NOME_EMPRESA', env('NOME_EMPRESA'));
-define('EMAIL_PRINCIPAL', env('EMAIL_PRINCIPAL'));
 // define('EMAIL_PRINCIPAL', 'suporte@tataweb.com.br');
 
 
@@ -46,7 +41,9 @@ class Email
         $mail->IsHTML(true);
         $mail->Body = mb_convert_encoding($this->corpoEmail(), "ISO-8859-1", "UTF-8");
         $mail->Subject = mb_convert_encoding($this->dados['assunto'] .  " - " . $this->dados['assuntoUsuario'], "ISO-8859-1", "UTF-8");
+echo '<pre>';
 
+var_dump(USERNAME_EMAIL);
         if ($this->filePath) {
             $mail->addAttachment($this->filePath);
         }

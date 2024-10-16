@@ -1,33 +1,5 @@
 <?php
-
-function loadEnv($filePath = '.env')
-{
-    if (!file_exists($filePath)) {
-        return;
-    }
-
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) {
-            continue;
-        }
-
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-
-        if (!array_key_exists($key, $_ENV)) {
-            $_ENV[$key] = $value;
-        }
-    }
-}
-
-function env($key, $default = null)
-{
-    global $_ENV;
-    return $_ENV[$key] ?? $default;
-}
-loadEnv();
+include_once __DIR__ .'/env.php';
 
 function logError($message)
 {
@@ -68,6 +40,13 @@ define('ASSETS', URL_APP .  "assets/");
 define('IMAGES', URL_APP .  "images/");
 define('UPLOADS', URL_APP .  "uploads/");
 define('DOCUMENTOS_VISUALIZAR', URL_APP .  "documentos/visualizar/");
+
+define('HOST_EMAIL', env('HOST_EMAIL'));
+define('USERNAME_EMAIL', env('USERNAME_EMAIL'));
+define('PASSWORD_EMAIL', env('PASSWORD_EMAIL'));
+define('NOME_EMPRESA', env('NOME_EMPRESA'));
+define('EMAIL_PRINCIPAL', env('EMAIL_PRINCIPAL'));
+
 
 // Diretórios do Aplicativo
 define('PATH_APP', __DIR__ . '/');
