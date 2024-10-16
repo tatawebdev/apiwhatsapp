@@ -1,5 +1,6 @@
 <?php
 
+use Models\Connection;
 use WhatsApp\InteractiveMessages;
 use WhatsApp\Message;
 
@@ -11,12 +12,18 @@ class Chatbot extends Models\Connection
     public $mensagemUsuario;
     public $event_type;
     public $last_message_id;
+    protected $connection; // Instância de conexão será armazenada aqui
+
+    public function __construct($host, $dbname, $username, $password)
+    {
+        $this->connection = Connection::getInstance($host, $dbname, $username, $password);
+    }
 
 
     public function getAtendimentosAntigosEmAndamento()
     {
-        $sql = "SELECT * FROM `atendimento`WHERE status = 'Em Andamento' AND created_at <= NOW() - INTERVAL 3 HOUR ORDER BY `status` ASC  ";
-        return $this->fetchAll($sql);
+        $sql = "SELECT * FROM `atendimento` WHERE status = 'Em Andamento' AND created_at <= NOW() - INTERVAL 3 HOUR ORDER BY `status` ASC LIMIT 3";
+        return $this->connection->fetchAll($sql);
     }
 
     // Função para processar a entrada do usuário
@@ -123,12 +130,12 @@ class Chatbot extends Models\Connection
     public function obterEstado()
     {
         $sql = "SELECT id_step as etapa, type_documento as tipo_documento FROM interacoes WHERE numero_usuario = ? ORDER BY ultima_interacao DESC LIMIT 1";
-        return $this->fetchAssoc($sql, [$this->numeroUsuario], 's') ?? ['etapa' => null, 'tipo_documento' => null];
+        return $this->connection->fetchAssoc($sql, [$this->numeroUsuario], 's') ?? ['etapa' => null, 'tipo_documento' => null];
     }
     public function isPrimeiraMensagemDoDia()
     {
         $sql = "SELECT ultima_interacao FROM interacoes WHERE numero_usuario = ? ORDER BY ultima_interacao DESC LIMIT 1";
-        $ultimaInteracao = $this->fetchAssoc($sql, [$this->numeroUsuario], "s")['ultima_interacao'];
+        $ultimaInteracao = $this->connection->fetchAssoc($sql, [$this->numeroUsuario], "s")['ultima_interacao'];
 
         // Verificar se a última interação é do dia atual
         if ($ultimaInteracao) {
@@ -146,7 +153,7 @@ class Chatbot extends Models\Connection
 
         // Prepara a consulta SQL para verificar se a interação já existe
         $sqlCheck = "SELECT COUNT(*) FROM interacoes WHERE numero_usuario = ?";
-        $count = $this->fetchAssoc($sqlCheck, [$this->numeroUsuario], "s")['COUNT(*)'];
+        $count = $this->connection->fetchAssoc($sqlCheck, [$this->numeroUsuario], "s")['COUNT(*)'];
 
         // Determina se deve atualizar ou inserir
         if ($count > 0) {
@@ -154,7 +161,7 @@ class Chatbot extends Models\Connection
             $sqlUpdate = "UPDATE interacoes SET ultima_interacao = NOW(), id_step = ?"
                 . ($typedocumento !== null ? ", type_documento = ?" : "") . " WHERE numero_usuario = ?";
 
-            $stmt = $this->query(
+            $stmt = $this->connection->query(
                 $sqlUpdate,
                 $typedocumento !== null ? [$idStep, $typedocumento, $this->numeroUsuario] : [$idStep, $this->numeroUsuario],
                 $typedocumento !== null ? "iss" : "is"
@@ -165,7 +172,7 @@ class Chatbot extends Models\Connection
                 . ($typedocumento !== null ? ", type_documento" : "") . ") VALUES (?, ?, NOW()"
                 . ($typedocumento !== null ? ", ?" : "") . ")";
 
-            $stmt = $this->query(
+            $stmt = $this->connection->query(
                 $sqlInsert,
                 $typedocumento !== null ? [$this->numeroUsuario, $idStep, $typedocumento] : [$this->numeroUsuario, $idStep],
                 $typedocumento !== null ? "sis" : "si"
@@ -296,7 +303,7 @@ class Chatbot extends Models\Connection
 
         // Verificar se o registro existe e o status não é 'Em Andamento' (limitando a 1 registro)
         $checkSql = "SELECT COUNT(*) FROM atendimento WHERE numero_usuario = ? AND status = 'Em Andamento' LIMIT 1";
-        $exists = $this->fetchAssoc($checkSql, [$numero_usuario], "s")['COUNT(*)'];
+        $exists = $this->connection->fetchAssoc($checkSql, [$numero_usuario], "s")['COUNT(*)'];
 
         if ($exists > 0) {
             // Atualizar o registro existente
@@ -309,18 +316,18 @@ class Chatbot extends Models\Connection
                     updated_at = CURRENT_TIMESTAMP 
                     WHERE numero_usuario = ? AND status = 'Em Andamento' LIMIT 1";
 
-                $this->query($updateSql, [$valor, $status, $numero_usuario], "sss");
+                $this->connection->query($updateSql, [$valor, $status, $numero_usuario], "sss");
 
                 // Obter o ID do registro atualizado
                 $getIdSql = "SELECT id FROM atendimento WHERE numero_usuario = ? AND status = ? ORDER BY id DESC LIMIT 1";
-                $id = $this->fetchAssoc($getIdSql, [$numero_usuario, $status], "ss")['id'];
+                $id = $this->connection->fetchAssoc($getIdSql, [$numero_usuario, $status], "ss")['id'];
 
                 return $id; // Retorna o ID do registro atualizado
             }
         } else {
             // Inserir novo atendimento
             $insertSql = "INSERT INTO atendimento (numero_usuario, $coluna, status, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-            $this->query($insertSql, [$numero_usuario, $valor, $status], "sss");
+            $this->connection->query($insertSql, [$numero_usuario, $valor, $status], "sss");
 
             // Obter o ID do registro recém-inserido
             return $this->mysqli->insert_id; // Recupera e retorna o ID gerado
@@ -336,7 +343,7 @@ class Chatbot extends Models\Connection
 
         // Consultar a tabela atendimento pelo numero_usuario
         $sql = "SELECT * FROM atendimento WHERE numero_usuario = ? AND status = 'Em Andamento'";
-        $result = $this->fetchAll($sql, [$numero_usuario], "s");
+        $result = $this->connection->fetchAll($sql, [$numero_usuario], "s");
 
         return !empty($result) ? $result : null; // Retorna um array de registros ou null
     }
@@ -348,7 +355,7 @@ class Chatbot extends Models\Connection
 
         // Consultar a tabela atendimento pelo id
         $sql = "SELECT * FROM atendimento WHERE id = ?";
-        $atendimento = $this->fetchAssoc($sql, [$id], "i");
+        $atendimento = $this->connection->fetchAssoc($sql, [$id], "i");
 
         return $atendimento ?: null; // Retorna o registro ou null se não houver registro
     }
@@ -363,7 +370,7 @@ class Chatbot extends Models\Connection
                 ORDER BY i.ultima_interacao DESC 
                 LIMIT 1";
 
-        $result = $this->fetchAssoc($sql, [$this->numeroUsuario], "s");
+        $result = $this->connection->fetchAssoc($sql, [$this->numeroUsuario], "s");
 
         // Se a pergunta estiver vazia, busca a primeira pergunta do banco
         if (empty($result)) {
@@ -371,7 +378,7 @@ class Chatbot extends Models\Connection
                     ORDER BY s.id ASC 
                     LIMIT 1";
 
-            $result = $this->fetchAssoc($sql, [], "");
+            $result = $this->connection->fetchAssoc($sql, [], "");
         }
 
         return $result ?: ['pergunta' => null, 'tipo_resposta' => null]; // Retorna a pergunta e tipo de resposta
@@ -385,7 +392,7 @@ class Chatbot extends Models\Connection
 
         // Consultar as opções de resposta com base no id_step
         $sql = "SELECT resposta_opcional, id_step_proximo FROM options WHERE id_step = ?";
-        $opcoes = $this->fetchAll($sql, [$idStep], "i");
+        $opcoes = $this->connection->fetchAll($sql, [$idStep], "i");
 
         return $opcoes ?: []; // Retorna um array de opções ou um array vazio se não houver opções
     }
@@ -784,6 +791,8 @@ class Chatbot extends Models\Connection
     public function enviarEmailbyID($id)
     {
         // Recupera os detalhes do atendimento utilizando o ID
+        checkAbandono();
+
         $get = $this->getById($id);
         $this->enviarEmailAtendimento($get);
     }
@@ -797,13 +806,12 @@ class Chatbot extends Models\Connection
                       LIMIT 1";
 
         // Executa a query passando o ID como parâmetro
-        $this->query($updateSql, [$id], "i");
+        $this->connection->query($updateSql, [$id], "i");
     }
 
     // Função para enviar um e-mail com os dados do atendimento
     public function enviarEmailAtendimento($get)
     {
-        checkAbandono();
 
         // Cria uma nova instância de Email
         $email = new Email();

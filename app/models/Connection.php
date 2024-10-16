@@ -4,9 +4,11 @@ namespace Models;
 
 class Connection
 {
+    private static $instance = null; // Armazena a instância única da conexão
     protected $mysqli;
 
-    public function __construct($host, $dbname, $username, $password)
+    // Construtor privado para impedir criação direta de novas instâncias
+    private function __construct($host, $dbname, $username, $password)
     {
         $this->mysqli = new \mysqli($host, $username, $password, $dbname);
         if ($this->mysqli->connect_error) {
@@ -15,6 +17,16 @@ class Connection
         $this->mysqli->set_charset("utf8");
     }
 
+    // Função para retornar a instância única
+    public static function getInstance($host, $dbname, $username, $password)
+    {
+        if (self::$instance === null) {
+            self::$instance = new self($host, $dbname, $username, $password);
+        }
+        return self::$instance;
+    }
+
+    // Métodos para executar queries, buscar dados e fechar a conexão
     public function query($sql, $params = [], $types = "")
     {
         $stmt = $this->mysqli->prepare($sql);
@@ -47,10 +59,10 @@ class Connection
         $stmt->close();
         return $data;
     }
-    
+
     public function close()
     {
         $this->mysqli->close();
+        self::$instance = null; // Reseta a instância
     }
 }
-
