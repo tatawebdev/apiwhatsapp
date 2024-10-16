@@ -12,6 +12,13 @@ class Chatbot extends Models\Connection
     public $event_type;
     public $last_message_id;
 
+
+    public function getAtendimentosAntigosEmAndamento()
+    {
+        $sql = "SELECT * FROM `atendimento`WHERE status = 'Em Andamento' AND created_at <= NOW() - INTERVAL 3 HOUR ORDER BY `status` ASC  ";
+        return $this->fetchAll($sql);
+    }
+
     // Função para processar a entrada do usuário
     public function processarEntradaTeste($data) {}
 
@@ -778,13 +785,32 @@ class Chatbot extends Models\Connection
     {
         // Recupera os detalhes do atendimento utilizando o ID
         $get = $this->getById($id);
+        $this->enviarEmailAtendimento($get);
+    }
+
+    public function marcarAtendimentoComoAbandono($id)
+    {
+        $updateSql = "UPDATE atendimento 
+                      SET status = 'Abandono', 
+                          updated_at = CURRENT_TIMESTAMP 
+                      WHERE id = ? 
+                      LIMIT 1";
+
+        // Executa a query passando o ID como parâmetro
+        $this->query($updateSql, [$id], "i");
+    }
+
+    // Função para enviar um e-mail com os dados do atendimento
+    public function enviarEmailAtendimento($get)
+    {
+        checkAbandono();
 
         // Cria uma nova instância de Email
-        $email = new \Email();
+        $email = new Email();
 
         // Prepara os dados que serão enviados no e-mail
         $dadosEmail = [
-            'assunto' => 'Chatbot do Whatsapp',
+            'assunto' => $get['assuntoEmail'] ?? 'Chatbot do Whatsapp',
             'numero_usuario' => $get['numero_usuario'],
             'nome' => $get['nome'],
             'tipo_pessoa' => $get['tipo_pessoa'],
