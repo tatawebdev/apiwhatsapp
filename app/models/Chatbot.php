@@ -516,7 +516,7 @@ class Chatbot extends Models\Connection
     {
 
         $urgencia = $this->mensagemUsuario;
-        $id = $this->atualizarAtendimento('urgencia', $urgencia);
+        $id = $this->atualizarAtendimento('urgencia', $urgencia, 'Finalizado');
 
         $this->finalizarAtendimento();
         $this->enviarEmailbyID($id);
