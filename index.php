@@ -1,6 +1,7 @@
 <?php
 
-function loadEnv($filePath = '.env') {
+function loadEnv($filePath = '.env')
+{
     if (!file_exists($filePath)) {
         return;
     }
@@ -21,7 +22,9 @@ function loadEnv($filePath = '.env') {
     }
 }
 
-function env($key, $default = null) {
+function env($key, $default = null)
+{
+    global $_ENV;
     return $_ENV[$key] ?? $default;
 }
 loadEnv();
@@ -92,9 +95,9 @@ try {
     $dbUser = env('DB_USER');
     $dbName = env('DB_NAME');
     $dbPassword = env('DB_PASSWORD');
-    
+
     $chatbot = new Chatbot($dbHost, $dbUser, $dbName, $dbPassword);
-    
+
 
     if (WebhookProcessor::isPOST()) {
         WebhookProcessor::debugOn();
