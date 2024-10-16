@@ -45,7 +45,6 @@ class Email
         if ($this->filePath) {
             $mail->addAttachment($this->filePath);
         }
-
         if ($mail->Send()) {
             $this->mensagem = "Sua mensagem foi enviada com sucesso. Entraremos em contato em breve.";
             return true;
@@ -76,45 +75,46 @@ class Email
             // Formatar CNPJ (xx.xxx.xxx/xxxx-xx)
             $documento = preg_replace("/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/", "\$1.\$2.\$3/\$4-\$5", $documento);
 
-            $dados = generateCompanyDocument($this->dados['documento']);;
+            $dadosAll = generateCompanyDocument($this->dados['documento']);;
             $informacoes = [
-                ['Nome', $this->dados['nome']],
-                ['Whatsapp', $numeroFormatado],
-                ['Tipo de Pessoa', $this->dados['tipo_pessoa']],
-                ['Documento', $documento],
-                ['Assunto', $this->dados['assuntoUsuario']],
-                ['Detalhes', $this->dados['detalhes']],
-                ['Urgência', $this->dados['urgencia']],
+                ['Nome', $this->dados['nome'] ?? 'N/A'],
+                ['Whatsapp', $numeroFormatado ?? 'N/A'],
+                ['Tipo de Pessoa', $this->dados['tipo_pessoa'] ?? 'N/A'],
+                ['Documento', $documento ?? 'N/A'],
+                ['Assunto', $this->dados['assuntoUsuario'] ?? 'N/A'],
+                ['Detalhes', $this->dados['detalhes'] ?? 'N/A'],
+                ['Urgência', $this->dados['urgencia'] ?? 'N/A'],
             ];
-            if ($dados) {
+            if ($dadosAll) {
+                $this->filePath = $dadosAll['filePath'];
+                $dados = $dadosAll['data'];
+                $dados2 = $dadosAll['data2'];
 
-                $this->filePath = $dados['filePath'];
-                $dados = $dados['data'];
                 $informacoesCNPJConsulta = [
-                    ['Razão social', $dados['razao_social']],
-                    ['Nome fantasia', $dados['estabelecimento']['nome_fantasia']],
-                    ['Situação cadastral', $dados['estabelecimento']['situacao_cadastral']],
-                    ['Porte (RFB)', $dados['porte']['descricao']],
-                    ['Data de abertura', date('d/m/Y', strtotime($dados['estabelecimento']['data_inicio_atividade']))],
-                    ['Natureza jurídica', $dados['natureza_juridica']['id'] . ' - ' . $dados['natureza_juridica']['descricao']],
-                    ['Capital social', 'R$ ' . number_format((float)$dados['capital_social'], 2, ',', '.')],
-                    ['Última atualização', date('d/m/Y', strtotime($dados['simples']['data_exclusao_simples']))],
-                    ['MEI', $dados['simples']['mei']],
-                    ['Simples', $dados['simples']['simples']],
-                    ['E-mail', $dados['estabelecimento']['email']],
-                    ['Telefone', $dados['estabelecimento']['ddd1'] . ' ' . $dados['estabelecimento']['telefone1']]
+                    ['Razão social', $dados['razao_social'] ?? 'N/A'],
+                    ['Nome fantasia', $dados2['nome_fantasia'] ?? 'N/A'],
+                    ['Situação cadastral', $dados['estabelecimento']['situacao_cadastral'] ?? 'N/A'],
+                    ['Porte (RFB)', $dados['porte']['descricao'] ?? 'N/A'],
+                    ['Data de abertura', isset($dados['estabelecimento']['data_inicio_atividade']) ? date('d/m/Y', strtotime($dados['estabelecimento']['data_inicio_atividade'])) : 'N/A'],
+                    ['Natureza jurídica', ($dados['natureza_juridica']['id'] ?? 'N/A') . ' - ' . ($dados['natureza_juridica']['descricao'] ?? 'N/A')],
+                    ['Capital social', 'R$ ' . number_format((float)($dados['capital_social'] ?? 0), 2, ',', '.')],
+                    ['Última atualização', isset($dados2['statusDate']) ? date('d/m/Y', strtotime($dados2['statusDate'])) : 'N/A'],
+                    ['MEI', $dados['simples']['mei'] ?? ''],
+                    ['Simples', isset($dados2['company']['simples']['optant']) ? ($dados2['company']['simples']['optant'] ? 'Sim' : 'Não') : 'N/A'],
+                    ['E-mail', $dados['estabelecimento']['email'] ?? 'N/A'],
+                    ['Telefone', ($dados['estabelecimento']['ddd1'] ?? '') . ' ' . ($dados['estabelecimento']['telefone1'] ?? 'N/A')]
                 ];
             }
         } else {
             // Formatar CPF (xxx.xxx.xxx-xx)
             $documento = preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "\$1.\$2.\$3-\$4", $documento);
             $informacoes = [
-                ['Nome', $this->dados['nome']],
-                ['Whatsapp', $numeroFormatado],
-                ['Tipo de Pessoa', $this->dados['tipo_pessoa']],
-                ['Assunto', $this->dados['assuntoUsuario']],
-                ['Detalhes', $this->dados['detalhes']],
-                ['Urgência', $this->dados['urgencia']],
+                ['Nome', $this->dados['nome'] ?? 'N/A'],
+                ['Whatsapp', $numeroFormatado ?? 'N/A'],
+                ['Tipo de Pessoa', $this->dados['tipo_pessoa'] ?? 'N/A'],
+                ['Assunto', $this->dados['assuntoUsuario'] ?? 'N/A'],
+                ['Detalhes', $this->dados['detalhes'] ?? 'N/A'],
+                ['Urgência', $this->dados['urgencia'] ?? 'N/A'],
             ];
         }
 

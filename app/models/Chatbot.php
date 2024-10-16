@@ -553,6 +553,7 @@ class Chatbot extends Models\Connection
         }
 
         // Lista de palavras proibidas
+        $palavrasProibidasExatas = ['oi', 'ola', 'olá', 'e aí', 'salve', 'bom dia', 'boa tarde', 'boa noite', 'hey', 'hello'];
         $palavrasProibidas = [
             'atendem',
             'vocês',
@@ -641,7 +642,65 @@ class Chatbot extends Models\Connection
             'atende em',
             'atende',
             'físico',
-            'escritório'
+            'escritório',
+
+
+            'atendimento',
+            'seus',
+            'a gente',
+            'quem',
+            'qualquer',
+            'para onde',
+            'porque',
+            'quando',
+            'quanto',
+            'quantidade',
+            'porque',
+            'onde',
+            'como',
+            'seja',
+            'estamos',
+            'está',
+            'fomos',
+            'você',
+            'queria',
+            'existem',
+            'pode',
+            'podes',
+            'poderia',
+            'deveria',
+            'deveria',
+            'devo',
+            'quero',
+            'tinha',
+            'tiveram',
+            'estou',
+            'sabe',
+            'sabemos',
+            'perguntei',
+            'pergunta',
+            'alguma',
+            'alguns',
+            'algumas',
+            'nada',
+            'tudo',
+            'apenas',
+            'somente',
+            'daqui',
+            'entre',
+            'entre em',
+            'disponível',
+            'opções',
+            'informa',
+            'ajuda',
+            'por favor',
+            'favor',
+            'solicito',
+            'gentileza',
+            'verifique',
+            'agendamento',
+            'obrigado',
+            'ajuda'
         ];
 
         // Mapeia os acentos para suas versões sem acento
@@ -651,12 +710,23 @@ class Chatbot extends Models\Connection
         // Verifica se contém alguma palavra proibida
         foreach ($palavrasProibidas as $palavra) {
             // Remove os acentos da palavra
-            $palavra = strtolower($palavra);
-            $nome = strtolower($nome);
+            $palavra = strtolower(($palavra));
+            $nome = strtolower(trim($nome));
             $palavraSemAcento = str_replace($acentos, $semAcento, $palavra);
             $nome = str_replace($acentos, $semAcento, $nome);
 
             if (stripos($nome, $palavraSemAcento) !== false) {
+                return false;
+            }
+        }
+        foreach ($palavrasProibidasExatas as $palavra) {
+            // Remove os acentos da palavra
+            $palavra = strtolower(trim($palavra));
+            $nome = strtolower(trim($nome));
+            $palavraSemAcento = str_replace($acentos, $semAcento, $palavra);
+            $nome = str_replace($acentos, $semAcento, $nome);
+
+            if ($nome == $palavraSemAcento) {
                 return false;
             }
         }

@@ -90,7 +90,7 @@ function generateCompanyDocument($cnpj)
     $company2Data = $cnpjConsulta->getCompanyData();
 
     // Caminho para o arquivo template.docx
-    $templateFile = 'template.docx';
+    $templateFile =  PATH_APP . 'docs/template.docx';
 
     // Carregar o template
     $templateProcessor = new TemplateProcessor($templateFile);
@@ -162,13 +162,14 @@ function generateCompanyDocument($cnpj)
     $templateProcessor->setValue('ATIVIDADE_SECUNDARIA', $atividadesSecundariasString);
 
     // Salvar o arquivo gerado
-    $generatedFile = __DIR__ . "/../consultas_cnpj/$cnpj.docx";
+    $generatedFile = PATH_APP . "docs/consultas_cnpj/$cnpj.docx";
     $templateProcessor->saveAs($generatedFile);
 
 
     return [
         'filePath' => $generatedFile,
-        'data' => $company1Data // Retorna os dados também
+        'data' => $company1Data, // Retorna os dados também
+        'data2' => $company2Data // Retorna os dados também
     ];
 
 
