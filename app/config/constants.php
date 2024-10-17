@@ -18,6 +18,7 @@ define('NOME_EMPRESA', $config['NOME_EMPRESA']);
 define('EMAIL_PRINCIPAL', $config['EMAIL_PRINCIPAL']);
 define('PATH_APP', realpath(__DIR__ . "/..") . '/');
 define('PATH_MODELS', realpath(PATH_APP . '/models') . '/');
+define('PATH_VIEW', realpath(PATH_APP . '/views') . '/');
 define('PATH_FUNCTIONS', PATH_APP . 'helpers/');
 define('PATH_LIBS', PATH_APP . 'libs/');
 

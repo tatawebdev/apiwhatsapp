@@ -17,6 +17,7 @@ class Connection
         $this->mysqli->set_charset("utf8");
     }
 
+    
     // Função para retornar a instância única
     public static function getInstance($host, $dbname, $username, $password)
     {

@@ -14,7 +14,7 @@ class Chatbot extends Models\Connection
     public $last_message_id;
     protected $connection; // Instância de conexão será armazenada aqui
 
-    public function __construct($host, $dbname, $username, $password)
+    public function __construct($host, $username, $dbname, $password)
     {
         $this->connection = Connection::getInstance($host, $dbname, $username, $password);
     }

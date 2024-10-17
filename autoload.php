@@ -74,3 +74,5 @@ include_once PATH_LIBS . 'whatsApp/Message.php';
 include_once PATH_LIBS . 'whatsApp/WebhookProcessor.php';
 
 carregarClassesRecursivamente(PATH_MODELS);
+
+Model::init();

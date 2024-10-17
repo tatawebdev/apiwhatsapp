@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Simples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #chatbox {
+            background: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin: 10px 0;
+        }
+
+        .usuario {
+            text-align: right;
+            color: blue;
+        }
+
+        .bot {
+            text-align: left;
+            color: green;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="chatbox">
+        <h2>Chatbot</h2>
+        <div id="messages">
+            <?php foreach ($_SESSION['respostas'] as $resposta): ?>
+                <div class="message usuario"><?= ($resposta['usuario']) ?></div>
+                <?php foreach ($resposta['bot'] as $bot): ?>
+
+                    <div class="message bot"><?= ($bot) ?></div>
+                <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
+        <form id="chat-form" method="post">
+            <input type="text" name="mensagem" id="mensagem" placeholder="Digite sua mensagem..." required>
+            <input type="submit" value="Enviar">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#chat-form').submit(function(event) {
+                event.preventDefault(); // Impede o envio padrão do formulário
+
+                // Adiciona a mensagem do usuário ao chat
+                let mensagem = $('#mensagem').val();
+                $('#messages').append('<div class="message usuario">' + mensagem + '</div>');
+                $('#mensagem').val(''); // Limpa o campo de entrada
+
+                // Faz uma requisição AJAX para enviar a mensagem ao PHP
+                $.ajax({
+                    url: '', // URL do mesmo arquivo
+                    type: 'POST',
+                    data: {
+                        mensagem: mensagem,
+                        telefone: '5511951936777'
+                    },
+                    success: function(response) {
+                        // Atualiza a lista de mensagens
+                        $('#messages').html($(response).find('#messages').html());
+                        $('#messages').scrollTop($('#messages')[0].scrollHeight); // Rolagem automática
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
