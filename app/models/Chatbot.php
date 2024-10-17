@@ -62,25 +62,25 @@ class Chatbot extends Models\Connection
                 if ($this->validarNome()) {
                     $this->atualizarAtendimento('nome', $this->mensagemUsuario);
 
-                    $this->enviarConsultaTributaria();
+                    $this->solicitarDetalhamentoDuvida();
                 } else {
                     $this->enviarMensagemWhatsApp($this->numeroUsuario, "Por favor, digite um nome válido para continuar.");
                 }
                 break;
             case 3:
-                if ($this->verificarTipoEvento('interactive', 'Por favor, selecione uma opção válida da lista.')) {
-                    $this->atualizarAtendimento('assunto', $this->mensagemUsuario);
-                    $this->solicitarDetalhamentoDuvida();
-                }
 
-                break;
-            case 4:
                 if ($this->verificarTipoEvento('message_text', 'Por favor, envie uma mensagem de texto com detalhes sobre sua dúvida.')) {
 
-                    if ($this->validarMensagemDetalhes($this->mensagemUsuario, 'A mensagem precisa ter pelo menos 5 palavras ou 15 caracteres. Por favor, forneça mais detalhes.')) {
+                    if ($this->validarMensagemDetalhes($this->mensagemUsuario, 'Por favor, forneça mais detalhes.')) {
                         $this->atualizarAtendimento('detalhes', $this->mensagemUsuario);
-                        $this->solicitarTipoPessoa();
+                        $this->enviarConsultaTributaria();
                     }
+                }
+                break;
+            case 4:
+                if ($this->verificarTipoEvento('interactive', 'Por favor, selecione uma opção válida da lista.')) {
+                    $this->atualizarAtendimento('assunto', $this->mensagemUsuario);
+                    $this->solicitarTipoPessoa();
                 }
                 break;
             case 5:
@@ -751,7 +751,7 @@ class Chatbot extends Models\Connection
     // Valida se a mensagem contém pelo menos 5 palavras
     public function validarMensagemDetalhes($mensagem, $mensagemErro)
     {
-        $mensagemValida = str_word_count(trim($mensagem)) >= 5;
+        $mensagemValida = str_word_count(trim($mensagem)) >= 3;
         if (!$mensagemValida)
             $this->enviarMensagemWhatsApp($this->numeroUsuario, $mensagemErro);
         return $mensagemValida;
