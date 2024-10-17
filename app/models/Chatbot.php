@@ -62,25 +62,25 @@ class Chatbot extends Models\Connection
                 if ($this->validarNome()) {
                     $this->atualizarAtendimento('nome', $this->mensagemUsuario);
 
-                    $this->solicitarDetalhamentoDuvida();
+                    $this->enviarConsultaTributaria();
                 } else {
                     $this->enviarMensagemWhatsApp($this->numeroUsuario, "Por favor, digite um nome válido para continuar.");
                 }
                 break;
             case 3:
+                if ($this->verificarTipoEvento('interactive', 'Por favor, selecione uma opção válida da lista.')) {
+                    $this->atualizarAtendimento('assunto', $this->mensagemUsuario);
+                    $this->solicitarDetalhamentoDuvida();
+                }
 
+                break;
+            case 4:
                 if ($this->verificarTipoEvento('message_text', 'Por favor, envie uma mensagem de texto com detalhes sobre sua dúvida.')) {
 
                     if ($this->validarMensagemDetalhes($this->mensagemUsuario, 'Por favor, forneça mais detalhes.')) {
                         $this->atualizarAtendimento('detalhes', $this->mensagemUsuario);
-                        $this->enviarConsultaTributaria();
+                        $this->solicitarTipoPessoa();
                     }
-                }
-                break;
-            case 4:
-                if ($this->verificarTipoEvento('interactive', 'Por favor, selecione uma opção válida da lista.')) {
-                    $this->atualizarAtendimento('assunto', $this->mensagemUsuario);
-                    $this->solicitarTipoPessoa();
                 }
                 break;
             case 5:
