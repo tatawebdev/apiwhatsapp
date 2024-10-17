@@ -34,9 +34,11 @@ try {
                 $testNumbersString = env('TEST_NUMBERS', '');
                 $numerosTeste = array_map('trim', explode(',', $testNumbersString));
                 if (in_array($webhookInfo['api_phone_number'], $numerosTeste)) {
-                    $chatbot->processarEntradaTeste($webhookInfo);
+                    $newChatbot = new newChatbot();
+                    $respostaBot = $newChatbot->processarEntrada($data);
+                } else {
+                    $chatbot->processarEntrada($webhookInfo);
                 }
-                $chatbot->processarEntrada($webhookInfo);
                 break;
             default:
                 $objMensagem->sendMessageText($webhookInfo['event_type']);
