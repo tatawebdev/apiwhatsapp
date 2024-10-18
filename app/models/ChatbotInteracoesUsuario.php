@@ -48,11 +48,14 @@ class ChatbotInteracoesUsuario extends Model
             // Retorna a interação atualizada
             return self::query("SELECT * FROM " . static::$table . " WHERE id = ?", [$interacaoExistente['id']])->fetch(PDO::FETCH_ASSOC);
         } else {
-            // Passo 4: Inserir uma nova interação
+            $flowAndStep = ChatbotInteracoesUsuario::getFlowAndStep();
+            $idFlow = $flowAndStep['id_flow'];
+            $idStep = $flowAndStep['id_step'];
+
             self::insert([
                 'id_usuario' => $id_usuario,
-                'id_flow' => 1,
-                'id_step' => 1,
+                'id_flow' => $idFlow,
+                'id_step' => $idStep,
                 'primeira_interacao' => date('Y-m-d H:i:s'),
                 'ultima_interacao' => date('Y-m-d H:i:s')
             ]);
@@ -61,17 +64,32 @@ class ChatbotInteracoesUsuario extends Model
             return self::query("SELECT * FROM " . static::$table . " WHERE id_usuario = ? ORDER BY id DESC LIMIT 1", [$id_usuario])->fetch(PDO::FETCH_ASSOC);
         }
     }
-
-public static function updateStepById($id, $newIdStep)
+    public static function getFlowAndStep()
     {
-        // Verifica se a interação existe antes de atualizar
+        $flowQuery = "SELECT id FROM chatbot_flows WHERE atual = 1 LIMIT 1";
+        $flowResult = self::query($flowQuery)->fetch(PDO::FETCH_ASSOC);
+
+        $idFlow = $flowResult ? $flowResult['id'] : 1;
+
+        $stepQuery = "SELECT id FROM chatbot_steps WHERE id_flow = ? LIMIT 1";
+        $stepResult = self::query($stepQuery, [$idFlow])->fetch(PDO::FETCH_ASSOC);
+
+        $idStep = $stepResult ? $stepResult['id'] : 1;
+
+        return [
+            'id_flow' => $idFlow,
+            'id_step' => $idStep
+        ];
+    }
+
+    public static function updateStepById($id, $newIdStep)
+    {
         $interacao = self::query("SELECT id FROM " . static::$table . " WHERE id = ?", [$id])->fetch(PDO::FETCH_ASSOC);
 
         if (!$interacao) {
             throw new Exception("Interação não encontrada com o ID: $id");
         }
 
-        // Atualiza o id_step da interação
         self::update([
             'id_step' => $newIdStep
         ], $id);
