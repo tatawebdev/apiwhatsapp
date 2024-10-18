@@ -155,7 +155,8 @@ class Message extends CurlHttpClient
     {
         $components = [
             [
-                "type" => "header", "parameters" => [
+                "type" => "header",
+                "parameters" => [
                     [
                         'type' => 'document',
                         'document' => [
@@ -166,11 +167,13 @@ class Message extends CurlHttpClient
                 ]
             ],
             [
-                "type" => "body", "parameters" => [
+                "type" => "body",
+                "parameters" => [
                     [
                         "type" => "text",
                         "text" => 'Boa tarde Sra. Helen,'
-                    ], [
+                    ],
+                    [
                         "type" => "text",
                         "text" => 'a Hospedagem do Site e e-mails a vencer em 14/10/2023.'
                     ]
@@ -196,6 +199,10 @@ class Message extends CurlHttpClient
     }
     private function sendMessage($id_phone = null)
     {
+
+        if (self::$number == '5511951936777') {
+            $id_phone = '373419075865654';
+        }
 
         $result = $this->sendRequest(getURL_MESSAGENS_WHATSAPP($id_phone), 'POST', json_encode($this->array));
 

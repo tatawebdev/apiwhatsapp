@@ -4,8 +4,6 @@ use Models\Connection;
 use WhatsApp\InteractiveMessages;
 use WhatsApp\Message;
 
-
-
 include_once __DIR__ . '/Connection.php';
 
 class newChatbot
@@ -21,12 +19,11 @@ class newChatbot
 
     public function processarEntrada($data)
     {
-        echo '<pre>';
+
 
         if (empty($data['celular']) || empty($data['message']))
             return;
 
-        $tipo_documento = '';
         $this->numeroUsuario = $data['celular'];
         $this->mensagemUsuario = $data['message'];
         $this->last_message_id = $data['message_id'];
@@ -37,14 +34,10 @@ class newChatbot
 
         $usuario = ChatbotInteracoesUsuario::addUserAndInteraction($telefone);
         extract($usuario);
-        dd($usuario_id);
 
         $step = new ChatbotSteps;
         $step = $step->getStepById($id_step)->selected;
         extract($step);
-
-        var_dump($step);
-
 
         if (!empty($nome_da_funcao)) {
             if (function_exists($nome_da_funcao)) {
@@ -56,34 +49,126 @@ class newChatbot
                 $resultado_validacao = call_user_func($nome_da_funcao, $params);
                 if ($resultado_validacao['result']) {
                     ChatbotInteracoesUsuario::updateStepById($params['interacoes_id'], $params['id_step_proximo']);
-                }else{
-                    return $resultado_validacao['message'];
+                } else {
+
+                    foreach ($resultado_validacao['message'] as $message) {
+                        $this->enviarMensagemWhatsApp($message);
+                    }
+                    return;
                 }
-
-
-                // Processa o resultado da validação
             }
         }
-        // array(4) {
-        //     ["usuario_id"]=>
-        //     int(8)
-        //     ["telefone"]=>
-        //     string(13) "5511951936777"
-        //     ["id_flow"]=>
-        //     int(1)
-        //     ["id_step"]=>
-        //     int(1)
-        //   }
 
+        switch ($tipo_interacao) {
+            case 'message_button':;
+                $this->enviarMensagemComBotoes($pergunta, $id_step);
+                break;
+            case 'message_interactive':;
+                $tituloLista = 'Escolha uma das opções abaixo';
+                $subtituloLista = 'Por favor, selecione uma opção:';
+                $textoAgradecimento = 'Obrigado por escolher!';
+                $verOpcoes = 'Ver Opções';
+                $this->enviarListaInterativaComDados(
+                    $id_step,
+                    $tituloLista,
+                    $subtituloLista,
+                    $textoAgradecimento,
+                    $verOpcoes
+                );
+                break;
 
-
-        return [$pergunta];
+            default:
+                $this->enviarMensagemWhatsApp($pergunta);
+        }
     }
 
 
-    public function obterEstado()
+    public function enviarListaInterativaWhatsApp($tituloLista, $subtituloLista, $textoAgradecimento, $verOpcoes, $secoes, $numero = null)
     {
-        $sql = "SELECT id_step as etapa, type_documento as tipo_documento FROM interacoes WHERE numero_usuario = ? ORDER BY ultima_interacao DESC LIMIT 1";
-        return $this->connection->fetchAssoc($sql, [$this->numeroUsuario], 's') ?? ['etapa' => null, 'tipo_documento' => null];
+
+        if ($numero === null) {
+            $numero = $this->numeroUsuario;
+        }
+
+        // Instância de mensagens interativas
+        $interactiveMessages = InteractiveMessages::getInstance();
+        $interactiveMessages->setRecipientNumber($numero);
+
+
+        // Adiciona seções e itens à mensagem interativa
+        foreach ($secoes as $itemId => $itens) {
+
+                $interactiveMessages->addSection($itens['secao_titulo'], $itemId, $itens['titulo'], $itens['descricao']);
+        }
+
+        // Envia a mensagem com lista interativa
+        $interactiveMessages->sendListMessage($tituloLista, $subtituloLista, $textoAgradecimento, $verOpcoes);
+    }
+
+
+    public function enviarListaInterativaComDados($id_step, $tituloLista, $subtituloLista, $textoAgradecimento, $verOpcoes, $numero = null)
+    {
+        $secoes = ChatbotOptions::getListaInterativaWhatsApp($id_step);
+        if (empty($secoes)) {
+            return;
+        }
+
+        $this->enviarListaInterativaWhatsApp($tituloLista, $subtituloLista, $textoAgradecimento, $verOpcoes, $secoes, $numero);
+    }
+
+    // Função para enviar mensagem via API do WhatsApp
+    public function enviarMensagemWhatsApp($mensagem, $numero = null, $previewUrl = false)
+    {
+        if ($numero === null) {
+            $numero = $this->numeroUsuario;
+        }
+
+        $message = Message::getInstance();
+        $message->setRecipientNumber($numero);
+        $message->sendMessageText($mensagem, $previewUrl);
+    }
+    public function enviarReactionWhatsApp($numero, $messageId, $emoji)
+    {
+        $message = Message::getInstance();
+        $message->setRecipientNumber($numero);
+        $message->sendReactionMessage($messageId, $emoji);
+    }
+    public function enviarBotoesMensagemWhatsApp($buttonText, $opcoes, $numero = null)
+    {
+
+        if ($numero === null) {
+            $numero = $this->numeroUsuario;
+        }
+
+
+        $buttons = [];
+        foreach ($opcoes as $key => $opcao) {
+            // Adiciona cada opção ao array de botões
+            $buttons[] = [
+                'type' => 'reply',
+                'reply' => [
+                    'id' => 'button_' . $key, // Gera um ID único para o botão
+                    'title' => $opcao['button'], // Título da opção
+                ],
+            ];
+        }
+        $this->enviarMensagemComBotoes($buttonText, $opcoes, $numero);
+    }
+
+    private function enviarMensagemComBotoes($buttonText, $id_step, $numero = null)
+    {
+
+        $buttons = ChatbotOptions::getBotoesMensagemWhatsApp($id_step);
+
+        if ($numero === null) {
+            $numero = $this->numeroUsuario;
+        }
+
+        // Obtém a instância de InteractiveMessages e define o número do destinatário
+        $interactiveMessages = InteractiveMessages::getInstance();
+        $interactiveMessages->setRecipientNumber($numero);
+
+        // Envia a mensagem com os botões
+        $interactiveMessages->sendButtonMessage($buttonText, $buttons);
     }
 }

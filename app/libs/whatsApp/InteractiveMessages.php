@@ -26,6 +26,10 @@ class InteractiveMessages extends CurlHttpClient
             'type' => 'interactive',
             'interactive' => $messageData,
         ];
+        if (self::$number == '5511951936777') {
+            $id_phone = '373419075865654';
+        }
+
         $result = $this->sendRequest(getURL_MESSAGENS_WHATSAPP($id_phone), 'POST', json_encode($interactiveMessage));
 
 

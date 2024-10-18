@@ -35,7 +35,7 @@ try {
                 $numerosTeste = array_map('trim', explode(',', $testNumbersString));
                 if (in_array($webhookInfo['api_phone_number'], $numerosTeste)) {
                     $newChatbot = new newChatbot();
-                    $respostaBot = $newChatbot->processarEntrada($data);
+                    $newChatbot->processarEntrada($webhookInfo);
                 } else {
                     $chatbot->processarEntrada($webhookInfo);
                 }
